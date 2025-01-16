@@ -18,8 +18,6 @@ def _find_tests(parent):
 
             # Extract test methods from classes
             elif _inspect.isclass(obj) and name.startswith(CLS_PREFIX):
-                # this creates a common class instance for test methods
-
                 found_tests.extend(_find_tests(obj))
 
             # grab test methods
@@ -76,4 +74,7 @@ def run(test_package, quiet=True):
 
     # I found this more reliable for printing to the console.
     # Otherwise, printing as I went the lines would stack, get out of order, etc.
-    print("\n".join(log))
+    
+    result = "\n".join(log)
+    print(result)
+    return result
