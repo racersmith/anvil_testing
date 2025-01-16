@@ -4,13 +4,13 @@ FN_PREFIX = "test_"
 CLS_PREFIX = "Test"
 
 
-def _find_tests(x):
+def _find_tests(parent):
     """recursivly find all functions/methods within the module that start with the test prefix"""
     found_tests = list()
 
-    for name in dir(x):
+    for name in dir(parent):
         if not name.startswith("_"):
-            obj = getattr(x, name)
+            obj = getattr(parent, name)
 
             # Delve into modules
             if _inspect.ismodule(obj):
@@ -23,15 +23,14 @@ def _find_tests(x):
                 found_tests.extend(_find_tests(obj))
 
             # grab test methods
+            # since parent is not an instance of the class obj is not seen as a method and rather, a function.
             elif (
-                _inspect.isclass(x)
+                _inspect.isclass(parent)
                 and _inspect.isfunction(obj)
                 and name.startswith(FN_PREFIX)
             ):
-                # since x is not an instance of the class obj is not seen as a method and rather, a function.
-
-                # create a new class instance for each test method.
-                class_instance = x()
+                # create a new class instance for each test method to isolate the tests
+                class_instance = parent()
                 found_tests.append(getattr(class_instance, name))
 
             # grab test functions
@@ -44,12 +43,12 @@ def _find_tests(x):
 def _format_test_name(fn, test_module_name="tests"):
     """Get a descriptive name of the function that explains where it lives"""
     module = fn.__module__.split(f"{test_module_name}.")[-1]
-    return f"{module}.{fn.__qualname__}"
+    return f"{module.replace('.', '/')}::{fn.__qualname__.replace('.', '::')}"
 
 
 def run(test_package, quiet=True):
     log = list()
-    log.append("== Starting Test ==")
+    log.append("== Anvil Testing ==")
     found_tests = _find_tests(test_package)
     n_tests = len(found_tests)
     log.append(f"Found {n_tests} tests\n")
