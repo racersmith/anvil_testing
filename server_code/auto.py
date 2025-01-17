@@ -46,7 +46,7 @@ def _format_test_name(fn, test_module_name="tests"):
 
 def run(test_package, quiet=True):
     log = list()
-    log.append("== Anvil Testing ==")
+    log.append(f"{' Anvil Testing ':=^50s}")
     found_tests = _find_tests(test_package)
     n_tests = len(found_tests)
     log.append(f"Found {n_tests} tests\n")
@@ -71,6 +71,8 @@ def run(test_package, quiet=True):
     # Summary info
     log.append(f"\n{passed}/{n_tests} passed")
     log.append(f"{failed} failed tests")
+    result = ' PASS ' if not failed else ' FAIL '
+    log.append(f"{result:=^50s}")
 
     # I found this more reliable for printing to the console.
     # Otherwise, printing as I went the lines would stack, get out of order, etc.
