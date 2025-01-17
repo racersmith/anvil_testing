@@ -4,7 +4,7 @@ from anvil.tables import app_tables
 import inspect as _inspect
 from dataclasses import dataclass
 
-FN_PREFIX = "test_"
+FN_PREFIX = "test_"  # also the method prefix
 CLS_PREFIX = "Test"
 
 
