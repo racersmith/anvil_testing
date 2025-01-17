@@ -1,6 +1,5 @@
-from contextlib import contextmanager
 from anvil import tables
-
+from contextlib import contextmanager
 
 def _verify_column(table_columns, expected_name, expected_type):
     """Check the table has a column with the expected name and type
@@ -29,10 +28,13 @@ def verify_table(table_name: str, expected_columns: dict):
     Returns: List of human readable errors
         if the list is empty, no errors were found.
     """
-    from anvil.tables import app_table
+    from anvil.tables import app_tables
     
-    table = app_table[table_name]
-    if ta
+    
+    if table_name not in app_tables:
+        return f"Table '{table_name}' not found."
+
+    table = app_tables[table_name]
     
     table_columns = table.list_columns()
     errors = list()
@@ -44,7 +46,7 @@ def verify_table(table_name: str, expected_columns: dict):
     if errors:
         fmt = "\n\t - "
         error_block = fmt + fmt.join(errors)
-        return "\n\t" + f"== {table_name} ==" + error_block
+        return "\n\t" + f"Table: {table_name}" + error_block
 
     return False
 
@@ -70,7 +72,10 @@ def temp_row(table, **kwargs):
         yield row
     finally:
         # delete our temporary row
-        row.delete()
+        try:
+            row.delete()
+        except tables.RowDeleted:
+            pass
 
 
 @contextmanager
@@ -90,10 +95,20 @@ def raises(expected_error):
         assert False, f"{expected_error} not raised."
 
     except expected_error:
-        assert True, f"{expected_error} raised."
+        # This is the expected path...
+        # Kinda silly to put this here since it does nothing.
+        # But it somehow feels right.
+        assert True, f"{expected_error} raised as expected."
 
+    except AssertionError as e:
+        # capture our own assertion or reraise if it was not from us.
+        if str(e) != f"{expected_error} not raised.":
+            raise e
+        
     except Exception as e:
+        # We got an exception but we didn't expect it.
         assert False, f"{type(e).__name__} raised, expected {expected_error.__name__}"
-
+            
     finally:
         pass
+

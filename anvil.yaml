@@ -1,5 +1,20 @@
 allow_embedding: false
-metadata: {description: Automated Testing, title: Anvil Testing}
+db_schema:
+  test_table:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: text_col
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: number_col
+      type: number
+    - admin_ui: {order: 2, width: 200}
+      name: bool_col
+      type: bool
+    server: full
+    title: TestTable
+metadata: {description: Automated Testing, logo_img: 'asset:icon.png', title: Anvil Testing}
 name: anvil_testing
 package_name: anvil_testing
 runtime_options:
@@ -8,6 +23,8 @@ runtime_options:
   server_version: python3-sandbox
   version: 2
 services:
-- client_config: {}
+- client_config: {enable_v2: true}
   server_config: {}
   source: /runtime/services/tables.yml
+startup: {module: _README, type: form}
+startup_form: null
