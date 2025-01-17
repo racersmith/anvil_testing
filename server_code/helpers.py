@@ -19,16 +19,21 @@ def _verify_column(table_columns, expected_name, expected_type):
     return f"column '{expected_name}' not found"
 
 
-def verify_table(table, expected_columns):
+def verify_table(table_name: str, expected_columns: dict):
     """Verify the table has all of the expected columns
     Args:
-        table: app_table
+        table: str, name of table
         expected_columns: [{'name': row_name, 'type': row_type}, ...]
             Grab this from the console with app_tables.my_table.list_columns()
 
     Returns: List of human readable errors
         if the list is empty, no errors were found.
     """
+    from anvil.tables import app_table
+    
+    table = app_table[table_name]
+    if ta
+    
     table_columns = table.list_columns()
     errors = list()
     for column in expected_columns:
@@ -39,7 +44,7 @@ def verify_table(table, expected_columns):
     if errors:
         fmt = "\n\t - "
         error_block = fmt + fmt.join(errors)
-        return "\n\t" + f"== {table} ==" + error_block
+        return "\n\t" + f"== {table_name} ==" + error_block
 
     return False
 
