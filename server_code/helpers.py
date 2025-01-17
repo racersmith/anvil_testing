@@ -19,7 +19,7 @@ def _verify_column(table_columns, expected_name, expected_type):
     return f"column '{expected_name}' not found"
 
 
-def verify_columns(table, expected_columns):
+def verify_table(table, expected_columns):
     """Verify the table has all of the expected columns
     Args:
         table: app_table
@@ -39,7 +39,7 @@ def verify_columns(table, expected_columns):
     if errors:
         fmt = "\n\t - "
         error_block = fmt + fmt.join(errors)
-        return error_block
+        return "\n\t" + f"== {table} ==" + error_block
 
     return False
 
@@ -70,7 +70,16 @@ def temp_row(table, **kwargs):
 
 @contextmanager
 def raises(expected_error):
-    # create our temporary row
+    """ Check that a test raises a specific exception 
+    Args:
+        expected_error: Exception that should be raised
+
+    Example:
+    with raises(AttributeError):
+        my_function()
+    
+    """
+    
     try:
         yield
         assert False, f"{expected_error} not raised."
