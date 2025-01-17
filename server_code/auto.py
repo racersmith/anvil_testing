@@ -12,8 +12,8 @@ def _find_tests(parent):
         if not name.startswith("_"):
             obj = getattr(parent, name)
 
-            # Delve into modules
-            if _inspect.ismodule(obj):
+            # Delve into modules in the same path, don't stray into imports.
+            if _inspect.ismodule(obj) and obj.__name__.startswith(parent.__name__):
                 found_tests.extend(_find_tests(obj))
 
             # Extract test methods from classes
@@ -74,7 +74,7 @@ def run(test_package, quiet=True):
 
     # I found this more reliable for printing to the console.
     # Otherwise, printing as I went the lines would stack, get out of order, etc.
-    
+
     result = "\n".join(log)
     print(result)
     return result
