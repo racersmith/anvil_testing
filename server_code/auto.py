@@ -58,7 +58,7 @@ class TestResult:
         if self.success:
             return f"  Pass: {self.test_name}"
         else:
-            return f"> Fail: {self.test_name} - {self.error}"
+            return f"> Fail: {self.test_name}\n\t- {self.error}"
 
     def __add__(self, other) -> int:
         return other + int(self.success)
