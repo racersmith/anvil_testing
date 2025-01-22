@@ -53,7 +53,7 @@ def _format_test_name(fn, test_module_name="tests"):
 class TestResult:
     success: bool
     test_name: str
-    error: str = ""
+    error: AssertionError | None=None
 
     _indent = 2
     _success_leader = "Pass: "
@@ -62,15 +62,37 @@ class TestResult:
     _success_indent = _indent * " "
     _failure_indent = _failure_indicator + _success_indent[1:]
 
+    _default_msg = 'Sorry, no info given.'
+
     def __str__(self):
         """Convert the test result into a string for the report"""
         if self.success:
             return textwrap.indent(f"{self._success_leader}{self.test_name}", self._success_indent)
         else:
-            if isinstance(self.error, list) or isinstance(self.error, set):
-                error = "\n".join(self.error)
+            if self.error is None:
+                error = self._default_msg
+            elif self.error is AssertionError:
+                error_arg = self.error.args
+                if error_arg:
+                    # drill down if possible
+                    error_arg = error_arg[0]
+
+                if not error_arg:
+                    error = self._default_msg
+                elif isinstance(error_arg, str):
+                    error = str(self.error)
+                elif isinstance(error_arg, list) or isinstance(error_arg, set):
+                    error = "\n".join(error_arg)
+                elif isinstance(error_arg, dict):
+                    error = "\n".join([f"{key}: {value}" for key, value in error_arg])
+                else:
+                    # Not sure how to process...
+                    error = str(error_arg)
+            elif self.error is Exception:
+                # there was an error running the test
+                error = f"{type(self.error)}: {str(self.error)}"
             else:
-                error = str(self.error)
+                error = f"Missed how to handle this error: {self.error}"
             error = textwrap.indent(error, (len(self._failure_leader) + self._indent) * ' ', lambda lines: True)
             return textwrap.indent(f"{self._failure_leader}{self.test_name}\n{error}", self._failure_indent, lambda lines: True)
 
@@ -100,7 +122,7 @@ def _run_test(test) -> TestResult:
     # capture a run error to aid in debugging
     # otherwise we just get the standard anvil runtime exception error.
     except Exception as e:
-        return TestResult(False, test_name, f"{type(e).__name__}: {e}")
+        return TestResult(False, test_name, e)
 
 
 def run(test_package, quiet=True):
