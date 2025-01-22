@@ -1,6 +1,7 @@
 from anvil import tables
 from contextlib import contextmanager
 
+
 def _verify_column(table_columns, expected_name, expected_type):
     """Check the table has a column with the expected name and type
     Args:
@@ -44,9 +45,7 @@ def verify_table(table_name: str, expected_columns: dict):
             errors.append(result)
 
     if errors:
-        fmt = "\n\t - "
-        error_block = fmt + fmt.join(errors)
-        return "\n\t" + f"Table: {table_name}" + error_block
+        return errors
 
     return False
 

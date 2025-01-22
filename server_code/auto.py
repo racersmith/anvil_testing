@@ -3,6 +3,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 import inspect as _inspect
 from dataclasses import dataclass
+import textwrap
 
 FN_PREFIX = "test_"  # also the method prefix
 CLS_PREFIX = "Test"
@@ -54,11 +55,24 @@ class TestResult:
     test_name: str
     error: str = ""
 
+    _indent = 2
+    _success_leader = "Pass: "
+    _failure_indicator = ">"
+    _failure_leader = "Fail: "
+    _success_indent = _indent * " "
+    _failure_indent = _failure_indicator + _success_indent[1:]
+
     def __str__(self):
+        """Convert the test result into a string for the report"""
         if self.success:
-            return f"  Pass: {self.test_name}"
+            return textwrap.indent(f"{self._success_leader}{self.test_name}", self._success_indent)
         else:
-            return f"> Fail: {self.test_name}\n\t- {self.error}"
+            if isinstance(self.error, list) or isinstance(self.error, set):
+                error = "\n".join(self.error)
+            else:
+                error = str(self.error)
+            error = textwrap.indent(error, (len(self._failure_leader) + self._indent) * ' ', lambda lines: True)
+            return textwrap.indent(f"{self._failure_leader}{self.test_name}\n{error}", self._failure_indent, lambda lines: True)
 
     def __add__(self, other) -> int:
         return other + int(self.success)
