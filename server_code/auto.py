@@ -60,8 +60,8 @@ class TestResult:
     _failure_indicator = ">"
     _failure_leader = "Fail: "
     _success_indent = _indent * " "
-    _failure_indent = _failure_indicator + _success_indent[1:]
-
+    _failure_indent = _failure_indicator + _success_indent[1:] if _failure_indicator else _success_indent
+    _error_indent = (len(_failure_leader) + _indent) * ' '
     _default_msg = 'Sorry, no info given.'
 
     def __str__(self):
@@ -71,7 +71,8 @@ class TestResult:
         else:
             if self.error is None:
                 error = self._default_msg
-            elif self.error is AssertionError:
+                
+            elif isinstance(self.error, AssertionError):
                 error_arg = self.error.args
                 if error_arg:
                     # drill down if possible
@@ -88,12 +89,12 @@ class TestResult:
                 else:
                     # Not sure how to process...
                     error = str(error_arg)
-            elif self.error is Exception:
+            elif isinstance(self.error, Exception):
                 # there was an error running the test
-                error = f"{type(self.error)}: {str(self.error)}"
+                error = f"Error during test: {type(self.error).__name__}: {str(self.error)}"
             else:
-                error = f"Missed how to handle this error: {self.error}"
-            error = textwrap.indent(error, (len(self._failure_leader) + self._indent) * ' ', lambda lines: True)
+                error = f"Missed how to handle this error: {type(self.error)}{self.error}"
+            error = textwrap.indent(error, self._error_indent, lambda lines: True)
             return textwrap.indent(f"{self._failure_leader}{self.test_name}\n{error}", self._failure_indent, lambda lines: True)
 
     def __add__(self, other) -> int:
