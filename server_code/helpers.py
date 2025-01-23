@@ -1,6 +1,7 @@
 from anvil import tables
 from contextlib import contextmanager
 
+import time
 
 def _verify_column(table_columns, expected_name, expected_type):
     """Check the table has a column with the expected name and type
@@ -77,8 +78,37 @@ def temp_row(table, **kwargs):
             pass
 
 
+@tables.in_transaction
 @contextmanager
-def raises(expected_error):
+def temp_changes():
+    """Create a temporary row in table that will be automatically deleted
+    Args:
+        table: app_table to create row within
+        kwargs: row properties, ie. id=1234, name='john'
+
+    Example:
+        row = app_tables.my_table.add_row(key='existing_row', info='Initial Info')
+        with temp_changes():
+            new_row = app_tables.my_table.add_row(key='test')
+            row = app_tables.my_table.get(key='existing_row')
+            row['info'] = 'Changed Info'
+            
+        assert row['info'] == "Initial Info"
+
+        with helpers.raises(tables.RowDeleted):
+            new_row.get_id()
+    """
+    
+    with tables.Transaction() as txn:
+        try:
+            yield None
+        finally:
+            # abort the transaction changes
+            txn.abort()
+
+
+@contextmanager
+def raises(expected_error, msg: str | None=None):
     """ Check that a test raises a specific exception 
     Args:
         expected_error: Exception that should be raised
@@ -86,12 +116,11 @@ def raises(expected_error):
     Example:
     with raises(AttributeError):
         my_function()
-    
     """
     
     try:
         yield
-        assert False, f"{expected_error} not raised."
+        assert False, msg or f"{expected_error} not raised."
 
     except expected_error:
         # This is the expected path...
@@ -111,3 +140,15 @@ def raises(expected_error):
     finally:
         pass
 
+
+def gen_int(n: int=19) -> int:
+    """ Create a random int for testint"""
+    v = time.time_ns() + int(str(time.time_ns())[::-1])
+    if n == 19:
+        return v
+    return v % int(n*'9')
+
+    
+def gen_str(n: int=16) -> str:
+    """ Create a random string for testing """
+    return hex(gen_int())[2:n+2]

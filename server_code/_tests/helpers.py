@@ -2,6 +2,31 @@ import anvil.tables as tables
 from anvil.tables import app_tables
 
 from .. import helpers
+from ..helpers import gen_int, gen_str
+
+
+
+class TestGenInt:
+    def test_int(self):
+        i = helpers.gen_int()
+        assert isinstance(i, int), f"expected an int not {type(i)}"
+
+    def test_int_n(self):
+        n = 5
+        i = helpers.gen_int(n)
+        assert len(str(i)) <= n, f"Int has more digits than expected: {n=} -> {i=}"
+
+
+class TestGenStr:
+    def test_str(self):
+        s = helpers.gen_str()
+        assert isinstance(s, str), f"expected a str not {type(s)}"
+
+    def test_str_n(self):
+        n = 5
+        s = helpers.gen_str(n)
+        assert len(s) == n, f"Incorrect characater count: {n=} -> {s=}"
+    
 
 
 class Test_VerifyColumn:
@@ -41,6 +66,8 @@ class TestVerifyTable:
     def test_bad_table_name(self):
         bad_table_name = "bad_table_name"
         result = helpers.verify_table(bad_table_name, self.expected_columns)
+        if not isinstance(result, str):
+            result = '\n'.join(result)
         assert (
             "not found" in result and bad_table_name in result
         ), f"Should get a table not found error: {result}"
@@ -48,6 +75,8 @@ class TestVerifyTable:
     def test_bad_table_column_name(self):
         bad_columns = [{"name": "non_existant_row", "type": "string"}]
         result = helpers.verify_table(self.table_name, bad_columns)
+        if not isinstance(result, str):
+            result = '\n'.join(result)
         assert (
             "not found" in result and "non_existant_row" in result
         ), f"Should get a column not found error: {result}"
@@ -56,6 +85,8 @@ class TestVerifyTable:
         bad_columns = [dict(self.expected_columns[0])]
         bad_columns[0]['type'] = 'bad_type'
         result = helpers.verify_table(self.table_name, bad_columns)
+        if not isinstance(result, str):
+            result = '\n'.join(result)
         assert (
             "type" in result and "bad_type" in result
         ), f"Should get a column type error: {result}"
@@ -97,7 +128,7 @@ class TestTempRow:
             row.get_id()
 
     def test_populated_row(self):
-        expected_data = {'text_col': 'abc', 'number_col': 1234, 'bool_col': True}
+        expected_data = {'text_col': gen_str(), 'number_col': gen_int(), 'bool_col': True}
         with helpers.temp_row(app_tables.test_table, **expected_data) as row:
             for column in self.column_names:
                 assert row[column] == expected_data[column], f"row[{column}] = {row[column]} expected {expected_data[column]}"
@@ -113,10 +144,44 @@ class TestTempRow:
 
     def test_deleted(self):
         try:
-            with helpers.temp_row(app_tables.test_table, text_col='row_a') as row:
+            with helpers.temp_row(app_tables.test_table, text_col=gen_str()) as row:
                 row.delete()
         except Exception as e:
             assert False, f"Error after deleting row within block: {e}"
+
+
+class TestTempChanges:
+    def __init__(self):
+        self.table = app_tables.test_table
+        self.column_names = [column['name'] for column in self.table.list_columns()]
+        
+        self.test_data = {'text_col': 'abc', 'number_col': 1234, 'bool_col': True}
+
+    def test_new_row(self):
+        with helpers.temp_changes():
+            new_row = self.table.add_row(text_col=gen_str())
+            new_row['number_col'] = gen_int()
+
+        with helpers.raises(tables.RowDeleted):
+            new_row.get_id()
+
+    def test_existing_row(self):
+        expected_number = gen_int()
+        with helpers.temp_row(self.table, text_col=gen_str(), number_col=expected_number) as existing_row:
+            with helpers.temp_changes():
+                new_row = self.table.add_row(number_col=gen_int())
+                new_row['bool_col'] = False
+                existing_row['bool_col'] = True
+                existing_row['number_col'] = gen_int()
+
+            with helpers.raises(tables.RowDeleted):
+                new_row.get_id()
+
+            assert existing_row['bool_col'] is None, f"Row should not have been updated with a value, {existing_row['bool_col']=}"
+            assert existing_row['number_col'] == expected_number, f"Row should not have been updated with a value, {existing_row['bool_col']=}"
+
+        
+                
 
 
 class TestRaises:
@@ -143,5 +208,13 @@ class TestRaises:
                 pass
         except AssertionError as e:
             assert 'LookupError not raised' in str(e), f"Expected to get a not raised assertion: {e}"
+
+    def test_custom_msg(self):
+        try:
+            msg = gen_str()
+            with helpers.raises(LookupError, msg):
+                pass
+        except AssertionError as e:
+            assert str(e) == msg, f"Did not get expected msg: {str(e)}"
             
             
