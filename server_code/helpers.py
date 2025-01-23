@@ -142,7 +142,7 @@ def raises(expected_error, msg: str | None = None):
         pass
 
 
-def gen_int(n_digits: int = 9) -> int:
+def gen_int(n_digits: int = 10) -> int:
     """Create a random int upto n_digits"""
     v = time.time_ns() + int(str(time.time_ns())[::-1])
     return v % (10**n_digits - 1)
