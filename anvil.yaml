@@ -14,7 +14,7 @@ db_schema:
       type: bool
     server: full
     title: TestTable
-metadata: {description: Automated Testing, logo_img: 'asset:icon.png', title: Anvil Testing}
+metadata: {description: Automated Testing, logo_img: 'asset:icon-logo.png', title: Anvil Testing}
 name: anvil_testing
 package_name: anvil_testing
 runtime_options:
