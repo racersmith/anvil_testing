@@ -80,8 +80,9 @@ def temp_row(table, **kwargs):
 
 @tables.in_transaction
 @contextmanager
-def temp_changes():
-    """Create a temporary row in table that will be automatically deleted
+def temp_writes():
+    """Create temporary writes to the table that will be discarded after the with block exits
+    
     Args:
         table: app_table to create row within
         kwargs: row properties, ie. id=1234, name='john'

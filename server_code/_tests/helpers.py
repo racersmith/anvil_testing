@@ -134,11 +134,12 @@ class TestTempRow:
                 assert row[column] == expected_data[column], f"row[{column}] = {row[column]} expected {expected_data[column]}"
                 
     def test_with_existing_rows(self):
+        table_count = len(app_tables.test_table.search())
         with helpers.temp_row(app_tables.test_table, text_col='row_a') as existing_row:
             existing_frozen = dict(existing_row)
             with helpers.temp_row(app_tables.test_table, text_col='row_b') as new_row:
                 rows = self.table.search()
-                assert len(rows) == 2, f"Expected to have two rows"
+                assert len(rows) == 2 + table_count, f"Expected to have {2 + table_count} rows"
                 new_row['bool_col'] = True
                 assert dict(existing_row) == existing_frozen, f"existing row somehow changed!"
 
@@ -150,7 +151,7 @@ class TestTempRow:
             assert False, f"Error after deleting row within block: {e}"
 
 
-class TestTempChanges:
+class TestTempWrites:
     def __init__(self):
         self.table = app_tables.test_table
         self.column_names = [column['name'] for column in self.table.list_columns()]
@@ -158,7 +159,7 @@ class TestTempChanges:
         self.test_data = {'text_col': 'abc', 'number_col': 1234, 'bool_col': True}
 
     def test_new_row(self):
-        with helpers.temp_changes():
+        with helpers.temp_writes():
             new_row = self.table.add_row(text_col=gen_str())
             new_row['number_col'] = gen_int()
 
@@ -166,23 +167,22 @@ class TestTempChanges:
             new_row.get_id()
 
     def test_existing_row(self):
-        expected_number = gen_int()
-        with helpers.temp_row(self.table, text_col=gen_str(), number_col=expected_number) as existing_row:
-            with helpers.temp_changes():
-                new_row = self.table.add_row(number_col=gen_int())
-                new_row['bool_col'] = False
-                existing_row['bool_col'] = True
-                existing_row['number_col'] = gen_int()
-
-            with helpers.raises(tables.RowDeleted):
-                new_row.get_id()
-
-            assert existing_row['bool_col'] is None, f"Row should not have been updated with a value, {existing_row['bool_col']=}"
-            assert existing_row['number_col'] == expected_number, f"Row should not have been updated with a value, {existing_row['bool_col']=}"
-
+        existing_row = self.table.get(text_col='existing_row')
+        previous_data = dict(existing_row)
         
-                
+        with helpers.temp_writes():
+            new_row = self.table.add_row(number_col=gen_int())
+            new_row['bool_col'] = False
+            existing_row['bool_col'] = not existing_row['bool_col']
+            existing_row['number_col'] = gen_int()
 
+        with helpers.raises(tables.RowDeleted):
+            new_row.get_id()
+
+        existing_row = self.table.get(text_col='existing_row')
+        assert existing_row['bool_col'] is previous_data['bool_col'], f"Row should not have been updated with a value, {existing_row['bool_col']=}"
+        assert existing_row['number_col'] == previous_data['number_col'], f"Row should not have been updated with a value, {existing_row['bool_col']=}"
+        
 
 class TestRaises:
     def test_expected(self):
