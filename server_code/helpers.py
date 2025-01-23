@@ -3,6 +3,7 @@ from contextlib import contextmanager
 
 import time
 
+
 def _verify_column(table_columns, expected_name, expected_type):
     """Check the table has a column with the expected name and type
     Args:
@@ -31,13 +32,12 @@ def verify_table(table_name: str, expected_columns: dict):
         if the list is empty, no errors were found.
     """
     from anvil.tables import app_tables
-    
-    
+
     if table_name not in app_tables:
         return f"Table '{table_name}' not found."
 
     table = app_tables[table_name]
-    
+
     table_columns = table.list_columns()
     errors = list()
     for column in expected_columns:
@@ -82,7 +82,7 @@ def temp_row(table, **kwargs):
 @contextmanager
 def temp_writes():
     """Create temporary writes to the table that will be discarded after the with block exits
-    
+
     Args:
         table: app_table to create row within
         kwargs: row properties, ie. id=1234, name='john'
@@ -93,13 +93,13 @@ def temp_writes():
             new_row = app_tables.my_table.add_row(key='test')
             row = app_tables.my_table.get(key='existing_row')
             row['info'] = 'Changed Info'
-            
+
         assert row['info'] == "Initial Info"
 
         with helpers.raises(tables.RowDeleted):
             new_row.get_id()
     """
-    
+
     with tables.Transaction() as txn:
         try:
             yield None
@@ -109,8 +109,8 @@ def temp_writes():
 
 
 @contextmanager
-def raises(expected_error, msg: str | None=None):
-    """ Check that a test raises a specific exception 
+def raises(expected_error, msg: str | None = None):
+    """Check that a test raises a specific exception
     Args:
         expected_error: Exception that should be raised
 
@@ -118,7 +118,7 @@ def raises(expected_error, msg: str | None=None):
     with raises(AttributeError):
         my_function()
     """
-    
+
     try:
         yield
         assert False, msg or f"{expected_error} not raised."
@@ -133,23 +133,21 @@ def raises(expected_error, msg: str | None=None):
         # capture our own assertion or reraise if it was not from us.
         if str(e) != f"{expected_error} not raised.":
             raise e
-        
+
     except Exception as e:
         # We got an exception but we didn't expect it.
         assert False, f"{type(e).__name__} raised, expected {expected_error.__name__}"
-            
+
     finally:
         pass
 
 
-def gen_int(n: int=19) -> int:
-    """ Create a random int for testint"""
+def gen_int(n_digits: int = 9) -> int:
+    """Create a random int upto n_digits"""
     v = time.time_ns() + int(str(time.time_ns())[::-1])
-    if n == 19:
-        return v
-    return v % int(n*'9')
+    return v % (10**n_digits - 1)
 
-    
-def gen_str(n: int=16) -> str:
-    """ Create a random string for testing """
-    return hex(gen_int())[2:n+2]
+
+def gen_str(n_characters: int = 10) -> str:
+    """Create a random string n_characters long"""
+    return hex(gen_int())[2 : n_characters + 2]
