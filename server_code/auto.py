@@ -53,25 +53,32 @@ def _format_test_name(fn, test_module_name="tests"):
 class TestResult:
     success: bool
     test_name: str
-    error: AssertionError | None=None
+    error: AssertionError | None = None
 
     _indent = 2
     _success_leader = "Pass: "
     _failure_indicator = ">"
     _failure_leader = "Fail: "
     _success_indent = _indent * " "
-    _failure_indent = _failure_indicator + _success_indent[1:] if _failure_indicator else _success_indent
-    _error_indent = (len(_failure_leader) + _indent) * ' '
-    _default_msg = 'Sorry, no info given.'
+    _failure_indent = (
+        _failure_indicator + _success_indent[1:]
+        if _failure_indicator
+        else _success_indent
+    )
+    _error_indent = (len(_failure_leader) + _indent) * " "
+    _default_msg = "Sorry, no info given."
 
     def __str__(self):
         """Convert the test result into a string for the report"""
         if self.success:
-            return textwrap.indent(f"{self._success_leader}{self.test_name}", self._success_indent)
+            return textwrap.indent(
+                f"{self._success_leader}{self.test_name}", self._success_indent
+            )
+            
         else:
             if self.error is None:
                 error = self._default_msg
-                
+
             elif isinstance(self.error, AssertionError):
                 error_arg = self.error.args
                 if error_arg:
@@ -80,22 +87,36 @@ class TestResult:
 
                 if not error_arg:
                     error = self._default_msg
+
                 elif isinstance(error_arg, str):
                     error = str(self.error)
+
                 elif isinstance(error_arg, list) or isinstance(error_arg, set):
                     error = "\n".join(error_arg)
+
                 elif isinstance(error_arg, dict):
                     error = "\n".join([f"{key}: {value}" for key, value in error_arg])
+
                 else:
                     # Not sure how to process...
                     error = str(error_arg)
+                    
             elif isinstance(self.error, Exception):
                 # there was an error running the test
-                error = f"Error during test: {type(self.error).__name__}: {str(self.error)}"
+                error = (
+                    f"Error during test: {type(self.error).__name__}: {str(self.error)}"
+                )
             else:
-                error = f"Missed how to handle this error: {type(self.error)}{self.error}"
+                error = (
+                    f"Missed how to handle this error: {type(self.error)}{self.error}"
+                )
+                
             error = textwrap.indent(error, self._error_indent, lambda lines: True)
-            return textwrap.indent(f"{self._failure_leader}{self.test_name}\n{error}", self._failure_indent, lambda lines: True)
+            return textwrap.indent(
+                f"{self._failure_leader}{self.test_name}\n{error}",
+                self._failure_indent,
+                lambda lines: True,
+            )
 
     def __add__(self, other) -> int:
         return other + int(self.success)
@@ -142,7 +163,9 @@ def run(test_package, quiet=True):
     test_results = [_run_test(test) for test in found_tests]
 
     # add results to output log according to quiet
-    log.extend(str(result) for result in test_results if not result.success or not quiet)
+    log.extend(
+        str(result) for result in test_results if not result.success or not quiet
+    )
 
     # Summary info
     passed = sum(test_results)
@@ -157,4 +180,3 @@ def run(test_package, quiet=True):
     result = "\n".join(log)
     print(result)
     return result
-
