@@ -141,7 +141,7 @@ def run(test_package, quiet=True):
     # Run the collected tests
     test_results = [_run_test(test) for test in found_tests]
 
-    # add results to output log
+    # add results to output log according to quiet
     log.extend(str(result) for result in test_results if not result.success or not quiet)
 
     # Summary info
