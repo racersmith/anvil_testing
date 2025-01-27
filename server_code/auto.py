@@ -1,3 +1,4 @@
+from anvil import app
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
@@ -155,6 +156,8 @@ def run(test_package, quiet=True):
     """
     log = list()
     log.append(f"{' Anvil Testing ':=^50s}")
+    app_info = f" {app.id}:{app.branch} "
+    log.append(f"{app_info:=^50s}")
     found_tests = _find_tests(test_package)
     n_tests = len(found_tests)
     log.append(f"Collected {n_tests} tests\n")
