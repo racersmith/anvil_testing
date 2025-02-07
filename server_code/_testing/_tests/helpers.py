@@ -1,8 +1,8 @@
 import anvil.tables as tables
 from anvil.tables import app_tables
 
-from .. import helpers
-from ..helpers import gen_int, gen_str
+from ... import helpers
+from ...helpers import gen_int, gen_str
 
 
 class TestGenInt:
@@ -155,7 +155,7 @@ class TestTempRow:
                 new_row["bool_col"] = True
                 assert (
                     dict(existing_row) == existing_frozen
-                ), f"existing row somehow changed!"
+                ), "existing row somehow changed!"
 
     def test_deleted(self):
         try:
