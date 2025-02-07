@@ -151,3 +151,42 @@ def gen_int(n_digits: int = 10) -> int:
 def gen_str(n_characters: int = 10) -> str:
     """Create a random string n_characters long"""
     return hex(gen_int())[2 : n_characters + 2]
+
+
+def create_test_webpage(tests, endpoint: str, static_app_id: str, header: str = None):
+    """
+    Expose an endpoint to run tests at when we are in a debug environment.
+    You will need to publish the debug version before this can be accessed.
+
+    This checks if this is running at the top level or as a dependency
+    
+    Args:
+        tests: the test directory typically from an import statement
+        endpoint: the route for the test page to render ie. '/test'
+        static_app_id: Found in the general settings or running anvil.app.id in the server console
+        header: optional string to put on first line to help distinguish the test
+
+    Example:
+        from anvil_testing import helpers
+        from . import tests
+        helpers.create_test_webpage(tests, '/test', 'CCW3SYLSAQHLCF2A', 'anvil_testing')
+        
+    """
+    
+    from anvil import app
+    
+    if "debug" in app.environment.tags and app.id == static_app_id:
+        import anvil.server
+        print("Tests can be run here:")
+        print(f"{anvil.server.get_app_origin('debug')}{endpoint}")
+        
+        @anvil.server.route(endpoint)
+        def run() -> anvil.server.HttpResponse:
+            import anvil_testing
+                
+            results = anvil_testing.auto.run(tests, quiet=False)
+            if header:
+                fmt_header = f"{header:_^50s}"
+                results = "\n".join([fmt_header, results])
+            
+            return anvil.server.HttpResponse(body=results)
