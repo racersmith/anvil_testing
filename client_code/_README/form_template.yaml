@@ -1,7 +1,7 @@
 components:
 - layout_properties: {grid_position: 'CMMLNY,VTVCLG'}
   name: image_1
-  properties: {source: _/theme/icon.png}
+  properties: {display_mode: shrink_to_fit, source: _/theme/icon-logo.png}
   type: Image
 - layout_properties: {grid_position: 'OAXTWP,YVBGLO'}
   name: rich_text_1
