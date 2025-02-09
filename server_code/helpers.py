@@ -158,7 +158,7 @@ def create_test_webpage(tests, endpoint: str, static_app_id: str, header: str = 
     Expose an endpoint to run tests at when we are in a debug environment.
     You will need to publish the debug version before this can be accessed.
 
-    This checks if this is running at the top level or as a dependency
+    This checks if this is running at the top level or as a dependency my matching the app_id
     
     Args:
         tests: the test directory typically from an import statement
