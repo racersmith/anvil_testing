@@ -158,7 +158,10 @@ def create_test_webpage(tests, endpoint: str, static_app_id: str, header: str = 
     Expose an endpoint to run tests at when we are in a debug environment.
     You will need to publish the debug version before this can be accessed.
 
-    This checks if this is running at the top level or as a dependency my matching the app_id
+    This checks if this is running at the top level or as a dependency by matching the app_id.
+    I would love to find a better way to do this...
+
+    You can add a ?quiet=true to your test url to show only the failed tests.
     
     Args:
         tests: the test directory typically from an import statement
@@ -177,16 +180,19 @@ def create_test_webpage(tests, endpoint: str, static_app_id: str, header: str = 
     
     if "debug" in app.environment.tags and app.id == static_app_id:
         import anvil.server
+
+        # Display where tests can be run in the server console
         print("Tests can be run here:")
         print(f"{anvil.server.get_app_origin('debug')}{endpoint}")
         
         @anvil.server.route(endpoint)
-        def run() -> anvil.server.HttpResponse:
+        def run(*args, **kwargs) -> anvil.server.HttpResponse:
             import anvil_testing
-                
-            results = anvil_testing.auto.run(tests, quiet=False)
-            if header:
-                fmt_header = f"{header:_^50s}"
-                results = "\n".join([fmt_header, results])
+
+            # allow ?quiet=True in url to set quiet status
+            quiet = kwargs.get('quiet', False)
+            if quiet:
+               quiet = str(quiet).lower() in {'1', 'true'}
             
+            results = anvil_testing.auto.run(tests, quiet=quiet, header=header)            
             return anvil.server.HttpResponse(body=results)

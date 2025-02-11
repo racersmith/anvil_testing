@@ -148,16 +148,26 @@ def _run_test(test) -> TestResult:
         return TestResult(False, test_name, e)
 
 
-def run(test_package, quiet=True):
+def run(test_package, quiet: bool=True, header: str=None) -> str:
     """Run the test suite
     Args:
         test_package: module where the tests reside
         quiet: True will only display failed tests, False will include passing tests in results
+        header: Something to display at the top to help with identification defaults to Anvil Testing
     """
     log = list()
-    log.append(f"{' Anvil Testing ':=^50s}")
+
+    # Construct header
+    if header is None:
+        header = 'Anvil Testing'
+    header = f" {header} "
+    log.append(f"{header:=^50s}")
+
+    # App identification and branch under test
     app_info = f" {app.id}:{app.branch} "
     log.append(f"{app_info:=^50s}")
+
+    # Collect tests
     found_tests = _find_tests(test_package)
     n_tests = len(found_tests)
     log.append(f"Collected {n_tests} tests\n")
