@@ -1,3 +1,7 @@
+<p align="center">
+<img src="theme/assets/icon-logo.png" height="256">
+</p>
+
 # Anvil Testing
 Designed as a dependency app to allow for automated testing within anvil.
 I've tried to stay consistent with pytest where possible to keep things feeling familiar.  
@@ -41,7 +45,7 @@ Classes should have the prefix `Test`
 Class methods should have the prefix `test_`
 functions, classes and methods without the prefix are ignored by test collection.
 
-``` python
+```python
 def test_positive():
     result = module_a.calculate()
     assert result > 0, f"Should always be positive {result}"
@@ -78,7 +82,7 @@ class TestSuite:
 ## Tests
 Tests are run using assert statements.  anvil_testing automatically captures these raised assertions and their message to display test failures.
 
-``` python
+```python
 assert True, "this does absolutely nothing."
 assert False, "this is raised as a test failure."
 
@@ -97,7 +101,7 @@ The tests can be run from the server REPL console.  The downside here is the con
 You will get a __click to reload__ message as changes are made.  Putting the three lines into a single block allows for a simple up arrow and enter to run the tests.  Here we are just ignoring the return value since it will print it for us.
 This will commonly look like this:
 
-``` python
+```python
 from . import tests
 import anvil_testing
 _ = anvil_testing.auto.run(tests)
@@ -121,7 +125,7 @@ Note: `anvil_testing` has a modified version of this webpage creation below.
 You can run the tests on this dependency here: [Test anvil_testing](https://ccw3sylsaqhlcf2a.anvil.app/WP2Y7J7IVWI6XXCQKUZS2OXO/test)
 
 #### test.py
-``` python
+```python
 from anvil import app
 
 """
@@ -186,7 +190,7 @@ My thought with the table check is that you could write a dependency app which r
 
 ### Temporary Table Row
 You can create temporary rows for usage in testing.  The test row is created using a `with` block.  After the block is exited the row is automatically deleted from the table.
-``` python
+```python
 with helpers.temp_row(app_tables.my_table, id='test') as row:
     assert my_func(row) == 42, "The answer is 42"
 
@@ -194,8 +198,10 @@ with helpers.temp_row(app_tables.my_table, id='test') as row:
 ```
 
 ### Temporary Table Writes
-If your tests require additional flexibility, you can enter a temporary write mode that will discard all writes to the table after exiting the block.
-``` python
+If your tests require additional flexibility, you can enter a temporary write mode that will discard all writes to 
+the table after exiting the block.  This is much more flexible than `temp_row` and multiple rows can be added without
+nesting `with` blocks.
+```python
 with helpers.temp_writes():
     new_row = app_tables.my_table.add_row(id='test')
     row = app_tables.my_table.get(id='abc')
@@ -211,13 +217,14 @@ It can be helpful to check that your code raised a specific exception when the t
 
 Example of `temp_row` and `raises`:
 
-``` python 
+```python 
 def test_temp_row():
     with helpers.temp_row(app_tables.my_table, id='TESTING') as row:
         row['api_version'] = '9'
         assert row['id'] == 'TESTING'
         assert row['api_version'] == '9'
-
+    
+    # The temp row that we created has been deleted
     with helpers.raises(tables.RowDeleted):
         row.get_id()   
 ```
@@ -225,7 +232,7 @@ def test_temp_row():
 ## Testing this app
 You can run the integrated tests of this app from the server REPL console by running the following
 
-``` python-repl
+```python-repl
 >>> from . import _tests
 >>> from . import auto
 >>> _ = auto.run(_tests, quiet=True)
