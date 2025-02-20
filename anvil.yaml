@@ -26,5 +26,5 @@ services:
 - client_config: {enable_v2: true}
   server_config: {}
   source: /runtime/services/tables.yml
-startup: {module: _README, type: form}
+startup: null
 startup_form: null

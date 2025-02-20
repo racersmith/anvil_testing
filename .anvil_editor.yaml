@@ -2,8 +2,7 @@ unique_ids:
   assets:
     icon-logo.png: '1737675359956437157306304.8935'
     icon.png: '1737141992197258155080220.9056'
-  forms:
-    _README: '1737139367634592770394613.8467'
+  forms: {}
   modules: {}
   scripts: {}
   server_modules:
